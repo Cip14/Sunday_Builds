@@ -3,16 +3,17 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define ALTURA 15
-#define LARGURA 15
+#define ALTURA 25
+#define LARGURA 25
 
 void closemaze(int lar, int alt, bool maze[lar][alt], bool visto[lar][alt]);
 void printmaze(int lar, int alt, bool maze[lar][alt]);
 void gerarmaze(int lar, int alt, bool maze[lar][alt], bool visto[lar][alt]);
 void pathfinder(int lar, int alt, bool maze[lar][alt], bool visto[lar][alt], int x, int y);
+int oddrand(int min, int max);
 
 int main(int argc, char const *argv[]) {
-  int lar = ALTURA*2+1, alt = LARGURA*2+1;
+  int lar = LARGURA*2+1, alt = ALTURA*2+1;
   bool maze[lar][alt], visto[lar][alt];
 
   closemaze(lar, alt, maze, visto);
@@ -23,24 +24,20 @@ int main(int argc, char const *argv[]) {
 }
 
 // Inicializa o maze todo fechado e o mapa "visto" que registra pontos
-// visitados e evita que o cursor derrube paredes externas
+// visitados
 void closemaze(int lar, int alt, bool maze[lar][alt], bool visto[lar][alt]){
-  for (int i = 0; i < lar; i++) {
-    for (int j = 0; j < alt; j++) {
-      maze[i][j] = true;
-      if (i == 0 || j == 0 || i == lar - 1 || j == alt - 1) {
-        visto[i][j] = true;
-      }else{
-        visto[i][j] = false;
-      }
+  for (int i = 0; i < alt; i++) {
+    for (int j = 0; j < lar; j++) {
+      maze[j][i] = true;
+      visto[j][i] = false;
     }
   }
 }
 
 void printmaze(int lar, int alt, bool maze[lar][alt]){
-  for (int i = 0; i < lar; i++) {
-    for (int j = 0; j < alt; j++) {
-      if (maze[i][j]) {
+  for (int i = 0; i < alt; i++) {
+    for (int j = 0; j < lar; j++) {
+      if (maze[j][i]) {
         printf("# ");
       }else{
         printf("  ");
@@ -57,9 +54,10 @@ void gerarmaze(int lar, int alt, bool maze[lar][alt], bool visto[lar][alt]){
   long seed = time(NULL);
   printf("Seed: %li\n", seed);
   srand(seed);
-  // Determina um ponto inicial aleatorio
-  int x = rand() % (lar - 2) + 1;
-  int y = rand() % (alt - 2) + 1;
+  // Determina um ponto inicial aleatorio impar
+  // Pontos iniciais pares tendem a gerar paredes externas duplas
+  int x = oddrand(1, lar);
+  int y = oddrand(1, alt);
   maze[x][y] = false;
   visto[x][y] = true;
 
@@ -93,7 +91,7 @@ void pathfinder(int lar, int alt, bool maze[lar][alt], bool visto[lar][alt], int
       break;
     }
 
-    if (x + i < 0 || x + i > lar - 1 || y + j < 0 || y + j > alt - 1) {
+    if (x + i < 1 || x + i > lar - 2 || y + j < 1 || y + j > alt - 2) {
       atravessouParede = true;
     }else{
       atravessouParede = false;
@@ -136,4 +134,12 @@ void pathfinder(int lar, int alt, bool maze[lar][alt], bool visto[lar][alt], int
   // ao retornar ao ponto anterior um novo pathfinder ira buscar um
   // novo caminho disponivel ou retornar novamente
   pathfinder(lar, alt, maze, visto, x, y);
+}
+
+int oddrand(int min, int max){
+  int x;
+  do{
+    x = rand () % (max - min) + min;
+  }while(x % 2 == 0);
+  return x;
 }
